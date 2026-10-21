@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Data;
 using System.Linq;
 using System.Windows.Forms;
+using System.IO;
 
 namespace Avtomoika
 {
@@ -106,5 +107,45 @@ namespace Avtomoika
         public string Service { get; set; }
         public decimal Price { get; set; }
         public DateTime DateTime { get; set; }
+                // КНОПКА: Экспорт статистики в файл
+        private void btnExportReport_Click(object sender, EventArgs e)
+        {
+            if (orderHistory.Count == 0)
+            {
+                MessageBox.Show("История заказов пуста. Нечего сохранять.", "Внимание", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                return;
+            }
+
+            string fileName = $"Отчет_Смена_{DateTime.Now:yyyy-MM-dd_HH-mm}.txt";
+
+            try
+            {
+                using (StreamWriter writer = new StreamWriter(fileName, false, System.Text.Encoding.UTF8))
+                {
+                    writer.WriteLine("=============================================");
+                    writer.WriteLine($"ОТЧЕТ АВТОМОЙКИ ЗА СМЕНУ ОТ {DateTime.Now:dd.MM.yyyy HH:mm}");
+                    writer.WriteLine("=============================================");
+                    writer.WriteLine($"{"№",-4} | {"Госномер",-10} | {"Тип кузова",-15} | {"Тип услуги",-22} | {"Итого",-10}");
+                    writer.WriteLine("-------------------------------------------------------------------------");
+
+                    foreach (var order in orderHistory)
+                    {
+                        writer.WriteLine($"{order.Id,-4} | {order.CarNumber,-10} | {order.CarType,-15} | {order.Service,-22} | {order.Price + "р.",-10}");
+                    }
+
+                    writer.WriteLine("-------------------------------------------------------------------------");
+                    writer.WriteLine($"Всего обработано автомобилей: {orderHistory.Count}");
+                    writer.WriteLine($"Суммарная выручка за смену : {orderHistory.Sum(o => o.Price):F2} руб.");
+                    writer.WriteLine("=============================================");
+                }
+
+                MessageBox.Show($"Отчет успешно сохранен:\n{Path.GetFullPath(fileName)}", "Экспорт завершен", MessageBoxButtons.OK, MessageBoxIcon.Information);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Ошибка: {ex.Message}", "Ошибка", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+        }
+
     }
 }
